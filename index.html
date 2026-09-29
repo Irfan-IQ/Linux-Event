@@ -45,15 +45,19 @@
     background: var(--panel-2);
     border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 16px 18px;
+    padding: 14px 14px;
+    min-height: 60px;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     cursor: pointer;
     transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.2s ease;
     text-align: left;
     width: 100%;
     color: var(--text);
+  }
+  @media (min-width: 640px) {
+    .option { padding: 16px 18px; gap: 14px; }
   }
   .option:hover { border-color: var(--border-strong); transform: translateY(-1px); }
   .option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -79,16 +83,21 @@
   }
   .option.selected .indicator svg { opacity: 1; transform: scale(1); }
   .option .opt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .option .opt-title { font-weight: 600; color: var(--text); line-height: 1.3; }
-  .option .opt-sub { color: var(--muted); font-size: 13px; line-height: 1.4; }
+  .option .opt-title { font-weight: 600; color: var(--text); line-height: 1.3; font-size: 15px; }
+  .option .opt-sub { color: var(--muted); font-size: 13px; line-height: 1.45; }
+  @media (min-width: 640px) {
+    .option .opt-title { font-size: 16px; }
+  }
 
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 12px 20px; border-radius: 12px;
-    font-weight: 600; font-size: 14px;
+    padding: 14px 20px; border-radius: 12px;
+    font-weight: 600; font-size: 15px;
+    min-height: 48px;
     transition: all 0.15s ease;
     border: 1px solid transparent;
     cursor: pointer;
+    white-space: nowrap;
   }
   .btn-primary { background: var(--accent); color: #1a1206; border-color: var(--accent); }
   .btn-primary:hover:not(:disabled) { background: var(--accent-2); transform: translateY(-1px); }
@@ -118,8 +127,8 @@
   .header-tux { display: inline-flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
 </style>
 
-<main class="min-h-screen w-full flex flex-col items-center px-4 py-8 sm:py-14">
-  <header class="w-full max-w-2xl mb-6 flex items-center justify-between">
+<main class="min-h-screen w-full flex flex-col items-center px-3 sm:px-4 py-5 sm:py-14">
+  <header class="w-full max-w-2xl mb-4 sm:mb-6 flex items-center justify-between gap-2">
     <div class="header-tux">
       <span style="color: var(--accent);">●</span>
       <span>install-party.sh</span>
@@ -127,10 +136,10 @@
     <div class="kbd-label">Distro Match</div>
   </header>
 
-  <section class="card w-full max-w-2xl p-5 sm:p-8 fade-in" id="app">
+  <section class="card w-full max-w-2xl p-4 sm:p-8 fade-in" id="app">
   </section>
 
-  <footer class="mt-6 text-center text-xs" style="color: var(--muted-2);">
+  <footer class="mt-5 sm:mt-6 text-center text-xs px-4" style="color: var(--muted-2);">
     A quick match tool for your first Linux install. No data leaves this page.
   </footer>
 </main>
@@ -355,10 +364,10 @@ function renderQuestion() {
 
       <div class="flex flex-col gap-3">${opts}</div>
 
-      <div class="flex items-center justify-between mt-8 gap-3">
-        <button class="btn btn-ghost" id="back-btn" ${state.step === 0 ? "disabled" : ""}>${icon("arrow-l")} Back</button>
-        <button class="btn btn-primary" id="next-btn" ${isStepValid() ? "" : "disabled"}>
-          ${state.step === total - 1 ? "See my match" : "Next"} ${icon("arrow-r")}
+      <div class="grid grid-cols-2 gap-3 mt-7 sm:mt-8">
+        <button class="btn btn-ghost w-full" id="back-btn" ${state.step === 0 ? "disabled" : ""}>${icon("arrow-l")} Back</button>
+        <button class="btn btn-primary w-full" id="next-btn" ${isStepValid() ? "" : "disabled"}>
+          ${state.step === total - 1 ? "See match" : "Next"} ${icon("arrow-r")}
         </button>
       </div>
     </div>
@@ -387,10 +396,10 @@ function renderResult() {
         <div class="kbd-label mt-1" style="color: var(--muted-2);">Recommended distribution</div>
       </div>
 
-      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mb-3" style="color: var(--text);">
+      <h1 class="text-[32px] leading-[1.05] sm:text-5xl font-bold tracking-tight mb-3" style="color: var(--text);">
         ${primary.name}
       </h1>
-      <p class="text-base sm:text-lg leading-relaxed mb-6" style="color: var(--muted);">
+      <p class="text-[15px] sm:text-lg leading-relaxed mb-6" style="color: var(--muted);">
         ${primary.tagline} ${rationale}
       </p>
 
@@ -405,9 +414,9 @@ function renderResult() {
         </div>
       </div>
 
-      <div class="flex items-center justify-between gap-3 flex-wrap">
-        <button class="btn btn-ghost" id="back-btn">${icon("arrow-l")} Change answers</button>
-        <button class="btn btn-primary" id="reset-btn">${icon("refresh")} Start over</button>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button class="btn btn-ghost w-full order-2 sm:order-1" id="back-btn">${icon("arrow-l")} Change answers</button>
+        <button class="btn btn-primary w-full order-1 sm:order-2" id="reset-btn">${icon("refresh")} Start over</button>
       </div>
     </div>
   `;
