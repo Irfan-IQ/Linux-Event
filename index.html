@@ -1,0 +1,424 @@
+<title>Distro Match</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0d12;
+    --bg-2: #0f141b;
+    --panel: #141b24;
+    --panel-2: #1a2330;
+    --border: #24303f;
+    --border-strong: #35485f;
+    --text: #eef2f7;
+    --muted: #8593a5;
+    --muted-2: #5f6c7e;
+    --accent: #f59e0b;
+    --accent-2: #fbbf24;
+    --accent-soft: rgba(245, 158, 11, 0.12);
+    --success: #34d399;
+    --debian: #d63384;
+    --fedora: #4f8ef7;
+    --arch: #64d1e3;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); }
+  body {
+    min-height: 100%;
+    background:
+      radial-gradient(1000px 500px at 50% -10%, rgba(245,158,11,0.10), transparent 60%),
+      radial-gradient(700px 400px at 90% 100%, rgba(79,142,247,0.08), transparent 60%),
+      var(--bg);
+  }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; text-wrap: balance; }
+  .mono { font-family: var(--font-mono); }
+  .kbd-label { letter-spacing: 0.14em; text-transform: uppercase; font-size: 11px; color: var(--muted-2); font-weight: 600; }
+  .card {
+    background: linear-gradient(180deg, var(--panel) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px -30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  .option {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.2s ease;
+    text-align: left;
+    width: 100%;
+    color: var(--text);
+  }
+  .option:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .option .indicator {
+    flex: 0 0 auto;
+    width: 22px; height: 22px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border-strong);
+    display: grid; place-items: center;
+    background: var(--bg-2);
+    transition: all 0.15s ease;
+  }
+  .option[data-type="single"] .indicator { border-radius: 50%; }
+  .option .indicator svg { width: 14px; height: 14px; opacity: 0; transform: scale(0.6); transition: all 0.15s ease; color: #0a0d12; }
+  .option.selected {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, rgba(245,158,11,0.10) 0%, var(--panel-2) 100%);
+    box-shadow: 0 0 0 1px var(--accent) inset, 0 10px 30px -20px rgba(245,158,11,0.5);
+  }
+  .option.selected .indicator {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .option.selected .indicator svg { opacity: 1; transform: scale(1); }
+  .option .opt-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .option .opt-title { font-weight: 600; color: var(--text); line-height: 1.3; }
+  .option .opt-sub { color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 20px; border-radius: 12px;
+    font-weight: 600; font-size: 14px;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #1a1206; border-color: var(--accent); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent-2); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--border-strong); }
+  .btn-ghost:hover:not(:disabled) { background: var(--panel-2); }
+  .btn-ghost:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .progress-track { height: 6px; background: var(--panel-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%); border-radius: 999px; transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border-strong); transition: all 0.3s ease; }
+  .step-dot.active { background: var(--accent); box-shadow: 0 0 0 4px rgba(245,158,11,0.15); }
+  .step-dot.done { background: var(--accent); opacity: 0.6; }
+
+  .fade-in { animation: fadeIn 0.35s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .family-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+  .family-debian { background: rgba(214,51,132,0.12); color: #f479b4; border: 1px solid rgba(214,51,132,0.35); }
+  .family-fedora { background: rgba(79,142,247,0.12); color: #7aa8ff; border: 1px solid rgba(79,142,247,0.35); }
+  .family-arch { background: rgba(100,209,227,0.12); color: #8ee0ee; border: 1px solid rgba(100,209,227,0.35); }
+
+  .alt-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border-strong); color: var(--text); font-weight: 500; font-size: 14px; }
+  .alt-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  .header-tux { display: inline-flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+</style>
+
+<main class="min-h-screen w-full flex flex-col items-center px-4 py-8 sm:py-14">
+  <header class="w-full max-w-2xl mb-6 flex items-center justify-between">
+    <div class="header-tux">
+      <span style="color: var(--accent);">●</span>
+      <span>install-party.sh</span>
+    </div>
+    <div class="kbd-label">Distro Match</div>
+  </header>
+
+  <section class="card w-full max-w-2xl p-5 sm:p-8 fade-in" id="app">
+  </section>
+
+  <footer class="mt-6 text-center text-xs" style="color: var(--muted-2);">
+    A quick match tool for your first Linux install. No data leaves this page.
+  </footer>
+</main>
+
+<script>
+const QUESTIONS = [
+  {
+    id: "workflow",
+    type: "multi",
+    title: "What will you actually do on this machine?",
+    subtitle: "Pick everything that fits. This shapes drivers and pre-installed tooling.",
+    options: [
+      { id: "everyday", title: "Everyday college & web browsing", sub: "Notes, docs, streaming, email, Zoom." },
+      { id: "gaming", title: "Heavy PC gaming", sub: "Steam, Proton, discrete GPU performance." },
+      { id: "dev", title: "Software development & backend", sub: "Editors, containers, servers, package managers." },
+      { id: "ricing", title: "Customization, tiling WMs & ricing", sub: "Themes, dotfiles, Hyprland, i3, bspwm." },
+    ],
+  },
+  {
+    id: "tolerance",
+    type: "single",
+    title: "How much do you want to fiddle with the system?",
+    subtitle: "Be honest. Bleeding-edge is fun until an update breaks Wi-Fi before class.",
+    options: [
+      { id: "zero", title: "Zero interest in maintenance", sub: "It must boot and work reliably every time without breaking." },
+      { id: "moderate", title: "Moderate", sub: "I can read forum posts and handle terminal fixes if updates cause quirks." },
+      { id: "high", title: "High", sub: "I enjoy terminal tinkering, breaking things, and running bleeding-edge packages." },
+    ],
+  },
+  {
+    id: "layout",
+    type: "single",
+    title: "Which desktop layout feels most like home?",
+    subtitle: "You can change themes later, but defaults matter on install day.",
+    options: [
+      { id: "classic", title: "Classic Windows-style", sub: "Bottom taskbar, start menu, system tray." },
+      { id: "modern", title: "Modern workspace", sub: "macOS / GNOME style — top bar, dock, and gestures." },
+      { id: "minimal", title: "Minimalist / keyboard-driven", sub: "Clean, lightweight, shortcut-focused." },
+    ],
+  },
+  {
+    id: "hardware",
+    type: "multi",
+    title: "What's inside the laptop or desktop?",
+    subtitle: "Pick all that apply. This decides driver strategy and desktop weight.",
+    options: [
+      { id: "nvidia", title: "NVIDIA dedicated GPU", sub: "GTX or RTX card — needs proprietary drivers." },
+      { id: "igpu", title: "Intel / AMD integrated graphics only", sub: "No dedicated GPU; runs on the CPU's iGPU." },
+      { id: "lowspec", title: "Low-spec / older machine", sub: "Under 8 GB RAM or an older CPU." },
+    ],
+  },
+];
+
+const DISTROS = {
+  mint:      { name: "Linux Mint",         family: "debian", tagline: "Cinnamon desktop, Windows-familiar, deeply stable." },
+  pop:       { name: "Pop!_OS",            family: "debian", tagline: "System76's Ubuntu-based OS with a dedicated NVIDIA ISO." },
+  ubuntu:    { name: "Ubuntu Desktop",     family: "debian", tagline: "The reference desktop Linux — largest support base." },
+  zorin:     { name: "Zorin OS",           family: "debian", tagline: "Ubuntu polished for Windows and macOS switchers." },
+  fedora:    { name: "Fedora Workstation", family: "fedora", tagline: "Clean upstream GNOME with modern kernel and toolchain." },
+  nobara:    { name: "Nobara Linux",       family: "fedora", tagline: "Fedora tuned for gaming — GPU drivers and Proton bits ready." },
+  endeavour: { name: "EndeavourOS",        family: "arch",   tagline: "Near-vanilla Arch with a friendly Calamares installer." },
+  garuda:    { name: "Garuda Linux",       family: "arch",   tagline: "Arch with gaming and ricing configured out of the box." },
+  manjaro:   { name: "Manjaro",            family: "arch",   tagline: "Arch derivative with delayed updates for extra stability." },
+};
+
+const FAMILY_LABELS = {
+  debian: { text: "Debian / Ubuntu Family", cls: "family-debian" },
+  fedora: { text: "Fedora Family",          cls: "family-fedora" },
+  arch:   { text: "Arch Family",            cls: "family-arch" },
+};
+
+const state = {
+  step: 0,
+  answers: { workflow: [], tolerance: null, layout: null, hardware: [] },
+  finished: false,
+};
+
+const app = document.getElementById("app");
+
+function isStepValid() {
+  const q = QUESTIONS[state.step];
+  const val = state.answers[q.id];
+  return q.type === "multi" ? Array.isArray(val) && val.length > 0 : !!val;
+}
+
+function toggle(qid, oid, type) {
+  if (type === "multi") {
+    const arr = state.answers[qid];
+    const i = arr.indexOf(oid);
+    if (i === -1) arr.push(oid); else arr.splice(i, 1);
+  } else {
+    state.answers[qid] = state.answers[qid] === oid ? null : oid;
+  }
+  render();
+}
+
+function next() {
+  if (!isStepValid()) return;
+  if (state.step < QUESTIONS.length - 1) {
+    state.step += 1;
+    render();
+  } else {
+    state.finished = true;
+    render();
+  }
+}
+
+function back() {
+  if (state.finished) { state.finished = false; render(); return; }
+  if (state.step > 0) { state.step -= 1; render(); }
+}
+
+function reset() {
+  state.step = 0;
+  state.finished = false;
+  state.answers = { workflow: [], tolerance: null, layout: null, hardware: [] };
+  render();
+}
+
+function recommend() {
+  const a = state.answers;
+  const wants = (k) => a.workflow.includes(k);
+  const hw = (k) => a.hardware.includes(k);
+  const gamingLike = wants("gaming") || hw("nvidia");
+
+  let primary, alternate, rationale;
+
+  if (a.tolerance === "high") {
+    if (wants("gaming") || wants("ricing")) {
+      primary = DISTROS.garuda;
+      rationale = `Garuda ships an Arch base with gaming stack, kernel tweaks, and rice-ready dotfiles preloaded — a fast start for a high-tolerance ${wants("gaming") ? "gaming" : "customization"} setup.`;
+    } else {
+      primary = DISTROS.endeavour;
+      rationale = `EndeavourOS gives you near-vanilla Arch with a graphical installer, so you get bleeding-edge packages and full control without hand-partitioning on install day.`;
+    }
+    alternate = primary === DISTROS.garuda ? DISTROS.manjaro : DISTROS.manjaro;
+    if (a.layout === "minimal") alternate = DISTROS.endeavour === primary ? DISTROS.manjaro : DISTROS.endeavour;
+  } else if (a.tolerance === "moderate") {
+    if (wants("gaming")) {
+      primary = DISTROS.nobara;
+      rationale = `Nobara is Fedora with the gaming pieces already wired up — NVIDIA drivers, Proton tooling, and codecs — so you can install, sign in to Steam, and play the same evening.`;
+      alternate = DISTROS.pop;
+    } else {
+      primary = DISTROS.fedora;
+      rationale = `Fedora Workstation gives you a clean upstream GNOME desktop and a modern kernel and toolchain, which suits ${wants("dev") ? "development work" : "everyday use"} on a machine whose owner can handle the occasional quirk.`;
+      alternate = wants("dev") || a.layout === "modern" ? DISTROS.pop : DISTROS.ubuntu;
+    }
+  } else {
+    if (hw("lowspec")) {
+      primary = DISTROS.mint;
+      rationale = `Linux Mint's Cinnamon desktop is light on resources and rock-steady on older hardware, and the Windows-style layout means very little relearning on the first day.`;
+      alternate = DISTROS.zorin;
+    } else if (a.layout === "classic") {
+      primary = DISTROS.mint;
+      rationale = `Linux Mint gives you the classic taskbar-and-start-menu layout on a stable Ubuntu LTS base, so it boots, works, and stays boring in the best way.`;
+      alternate = DISTROS.zorin;
+    } else if (gamingLike || a.layout === "modern") {
+      primary = DISTROS.pop;
+      rationale = `Pop!_OS ships an NVIDIA ISO and a polished modern desktop, so ${hw("nvidia") ? "your GTX/RTX card works after the first boot" : "you get a smooth macOS/GNOME-style workspace"} without touching drivers.`;
+      alternate = DISTROS.ubuntu;
+    } else {
+      primary = DISTROS.ubuntu;
+      rationale = `Ubuntu Desktop is the widest-supported Linux — any tutorial, driver, or forum thread you find will assume it, which is exactly what you want when you don't plan to maintain the system.`;
+      alternate = DISTROS.zorin;
+    }
+  }
+
+  return { primary, alternate, rationale };
+}
+
+function icon(kind) {
+  if (kind === "check") return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  if (kind === "dot") return '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>';
+  if (kind === "arrow-r") return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+  if (kind === "arrow-l") return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>';
+  if (kind === "refresh") return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+  if (kind === "sparkle") return '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L20 9.5l-5 3.5 1.9 6L12 15.8 7.1 19l1.9-6-5-3.5 6.1-1.9z"/></svg>';
+  return "";
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[state.step];
+  const val = state.answers[q.id];
+  const stepNum = state.step + 1;
+  const total = QUESTIONS.length;
+  const pct = (state.step / total) * 100;
+
+  const dots = QUESTIONS.map((_, i) => {
+    const cls = i === state.step ? "step-dot active" : i < state.step ? "step-dot done" : "step-dot";
+    return `<span class="${cls}"></span>`;
+  }).join("");
+
+  const opts = q.options.map((o) => {
+    const selected = q.type === "multi" ? val.includes(o.id) : val === o.id;
+    return `
+      <button class="option ${selected ? "selected" : ""}" data-type="${q.type}" data-qid="${q.id}" data-oid="${o.id}">
+        <span class="indicator">${icon(q.type === "multi" ? "check" : "dot")}</span>
+        <span class="opt-body">
+          <span class="opt-title">${o.title}</span>
+          <span class="opt-sub">${o.sub}</span>
+        </span>
+      </button>`;
+  }).join("");
+
+  const hint = q.type === "multi" ? "Choose one or more" : "Choose one";
+
+  app.innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-3">
+        <div class="kbd-label">Step ${stepNum} of ${total}</div>
+        <div class="flex items-center gap-1.5">${dots}</div>
+      </div>
+      <div class="progress-track mb-6"><div class="progress-fill" style="width:${pct}%"></div></div>
+
+      <div class="mb-6">
+        <h2 class="text-2xl sm:text-[26px] font-semibold leading-tight mb-2">${q.title}</h2>
+        <p class="text-sm" style="color: var(--muted);">${q.subtitle}</p>
+        <div class="mt-3 inline-flex items-center gap-2 text-[11px] mono px-2.5 py-1 rounded-md" style="background: var(--accent-soft); color: var(--accent-2);">
+          ${hint}
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-3">${opts}</div>
+
+      <div class="flex items-center justify-between mt-8 gap-3">
+        <button class="btn btn-ghost" id="back-btn" ${state.step === 0 ? "disabled" : ""}>${icon("arrow-l")} Back</button>
+        <button class="btn btn-primary" id="next-btn" ${isStepValid() ? "" : "disabled"}>
+          ${state.step === total - 1 ? "See my match" : "Next"} ${icon("arrow-r")}
+        </button>
+      </div>
+    </div>
+  `;
+
+  app.querySelectorAll(".option").forEach((el) => {
+    el.addEventListener("click", () => toggle(el.dataset.qid, el.dataset.oid, el.dataset.type));
+  });
+  document.getElementById("back-btn").addEventListener("click", back);
+  document.getElementById("next-btn").addEventListener("click", next);
+}
+
+function renderResult() {
+  const { primary, alternate, rationale } = recommend();
+  const badge = FAMILY_LABELS[primary.family];
+
+  app.innerHTML = `
+    <div class="fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <div class="kbd-label" style="color: var(--accent);">Your match</div>
+        <span class="family-badge ${badge.cls}">${badge.text}</span>
+      </div>
+
+      <div class="flex items-start gap-3 mb-2" style="color: var(--accent);">
+        ${icon("sparkle")}
+        <div class="kbd-label mt-1" style="color: var(--muted-2);">Recommended distribution</div>
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mb-3" style="color: var(--text);">
+        ${primary.name}
+      </h1>
+      <p class="text-base sm:text-lg leading-relaxed mb-6" style="color: var(--muted);">
+        ${primary.tagline} ${rationale}
+      </p>
+
+      <div class="rounded-2xl p-5 mb-6" style="background: var(--panel-2); border: 1px solid var(--border);">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div class="kbd-label mb-1">Alternative choice</div>
+            <div class="font-semibold text-lg">${alternate.name}</div>
+            <div class="text-sm" style="color: var(--muted);">${alternate.tagline}</div>
+          </div>
+          <span class="alt-pill"><span class="dot"></span>Backup pick</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <button class="btn btn-ghost" id="back-btn">${icon("arrow-l")} Change answers</button>
+        <button class="btn btn-primary" id="reset-btn">${icon("refresh")} Start over</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("back-btn").addEventListener("click", back);
+  document.getElementById("reset-btn").addEventListener("click", reset);
+}
+
+function render() {
+  if (state.finished) renderResult(); else renderQuestion();
+}
+
+render();
+</script>
