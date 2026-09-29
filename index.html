@@ -25,6 +25,7 @@
     --font-mono: "JetBrains Mono", ui-monospace, monospace;
   }
   html, body { background: var(--bg); color: var(--text); font-family: var(--font-body); }
+  html, body { height: 100%; }
   body {
     min-height: 100%;
     background:
@@ -40,6 +41,19 @@
     border: 1px solid var(--border);
     border-radius: 20px;
     box-shadow: 0 20px 60px -30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  @media (max-width: 640px) {
+    .card {
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100dvh - 120px);
+    }
+    .card > div { display: flex; flex-direction: column; flex: 1; }
+    .card .actions {
+      margin-top: auto;
+      padding-top: 20px;
+    }
   }
   .option {
     background: var(--panel-2);
@@ -125,10 +139,43 @@
   .alt-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
 
   .header-tux { display: inline-flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+  .page-shell {
+    min-height: 100dvh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px 12px;
+    gap: 12px;
+  }
+  .page-header {
+    width: 100%;
+    max-width: 42rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .page-footer {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted-2);
+    padding: 4px 12px 0;
+    max-width: 42rem;
+  }
+  @media (min-width: 640px) {
+    .page-shell {
+      padding: 56px 20px;
+      gap: 24px;
+      justify-content: center;
+    }
+    .page-footer { padding-top: 0; }
+  }
 </style>
 
-<main class="min-h-screen w-full flex flex-col items-center px-3 sm:px-4 py-5 sm:py-14">
-  <header class="w-full max-w-2xl mb-4 sm:mb-6 flex items-center justify-between gap-2">
+<main class="page-shell">
+  <header class="page-header">
     <div class="header-tux">
       <span style="color: var(--accent);">●</span>
       <span>install-party.sh</span>
@@ -136,10 +183,10 @@
     <div class="kbd-label">Distro Match</div>
   </header>
 
-  <section class="card w-full max-w-2xl p-4 sm:p-8 fade-in" id="app">
+  <section class="card w-full max-w-2xl p-5 sm:p-8 fade-in" id="app">
   </section>
 
-  <footer class="mt-5 sm:mt-6 text-center text-xs px-4" style="color: var(--muted-2);">
+  <footer class="page-footer">
     A quick match tool for your first Linux install. No data leaves this page.
   </footer>
 </main>
@@ -364,7 +411,7 @@ function renderQuestion() {
 
       <div class="flex flex-col gap-3">${opts}</div>
 
-      <div class="grid grid-cols-2 gap-3 mt-7 sm:mt-8">
+      <div class="actions grid grid-cols-2 gap-3 mt-7 sm:mt-8">
         <button class="btn btn-ghost w-full" id="back-btn" ${state.step === 0 ? "disabled" : ""}>${icon("arrow-l")} Back</button>
         <button class="btn btn-primary w-full" id="next-btn" ${isStepValid() ? "" : "disabled"}>
           ${state.step === total - 1 ? "See match" : "Next"} ${icon("arrow-r")}
@@ -414,7 +461,7 @@ function renderResult() {
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="actions grid grid-cols-1 sm:grid-cols-2 gap-3">
         <button class="btn btn-ghost w-full order-2 sm:order-1" id="back-btn">${icon("arrow-l")} Change answers</button>
         <button class="btn btn-primary w-full order-1 sm:order-2" id="reset-btn">${icon("refresh")} Start over</button>
       </div>
